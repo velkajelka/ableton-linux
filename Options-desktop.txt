@@ -1,0 +1,3 @@
+-_LinuxMidiBackend=Alsa
+-SuppressStartUpMessages
+-_DisableAutoUpdates

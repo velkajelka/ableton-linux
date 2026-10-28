@@ -1,0 +1,30 @@
+Libraries tools/patch-live.py copies into push3_opt/push3/lib/xkbcommon. The
+shim (standalone.cpp, loadXkbcommon) loads them only when the system has no
+libxkbcommon-x11; otherwise the system's own pair is used.
+
+libxkbcommon.so.0, libxkbcommon-x11.so.0: xkbcommon 1.5.0 from Debian 12
+(packages libxkbcommon0 and libxkbcommon-x11-0 1.5.0-1 from deb.debian.org
+over HTTPS, matching the SHA256 in bookworm's Packages index:
+e3fe045b9a33a101de1c5a912a4a10928db055c3f68930f47eccbb44d7c7d54e and
+9b34d760f0ca0f125419a6becc6492c489f0371953ef42caad3401199a497ff5).
+libxkbcommon-x11 builds keymaps with libxkbcommon's internal structures, so the
+two must be the same version: Arch's x11 part (1.13) with Ubuntu's libxkbcommon
+(1.6) crashed Live on the first key press. These need glibc 2.33, below Live's
+own 2.35; Arch's and Ubuntu 24.04's builds need 2.38 (for __isoc23_strtol).
+
+innoextract: innoextract 1.10-dev (git 6e9e34e, github.com/dscharrer/innoextract,
+zlib licence, LICENSE.innoextract), for install.sh. Live 12.4's Windows installer is Inno Setup 6.4
+(setup data version 6.4.0.1), which innoextract 1.9, the release most
+distributions ship (Ubuntu, Mint, Debian, Fedora), cannot read. Boost,
+libstdc++ and libgcc are linked in; it needs glibc 2.35, liblzma.so.5,
+libz.so.1 and libbz2.so.1.0 (install.sh links libbz2.so.1 under that name on
+Fedora and openSUSE). Built with Arch's Boost 1.92 static libraries and the
+AUR package's boost1.89.0.patch:
+  g++ -O2 -c ../innoextract-compat.cpp -o ic.o
+  g++ -O2 -c ../../shim/glibccompat.cpp -o gc.o   (wic_unpacked/shim)
+  cmake <src> -DCMAKE_BUILD_TYPE=Release -DUSE_STATIC_LIBS=OFF -DBoost_USE_STATIC_LIBS=ON \
+      -DUSE_LTO=OFF -DBUILD_TESTS=OFF \
+      -DCMAKE_EXE_LINKER_FLAGS="$PWD/ic.o $PWD/gc.o -static-libstdc++ -static-libgcc -Wl,--as-needed -s"
+  make
+(innoextract-compat.cpp: arc4random, GLIBC_2.36 in Arch's static Boost.Random;
+glibccompat.cpp: the C23 strtoul and sscanf of glibc 2.38 headers.)
