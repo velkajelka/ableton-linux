@@ -1,23 +1,30 @@
 # Ableton Live 12 on Linux
+![Project in Live](LiveDemo.png)
 
-Runs the Linux build of Ableton Live 12 that ships inside the Push 3 recovery image as a normal desktop app. The content the image lacks (Core Library, lessons, stem models, cursors, icon) comes from the Windows Suite installer.
+<br>
+
+This project brings you the Linux build of Ableton Live 12 that ships inside the Push 3 recovery image as a normal desktop app. With some custom shims it transforms it into a fully functional Live 12, but running natively on Linux. The content the image lacks (Core Library, lessons, stem models, cursors, icon) comes from the Windows Suite installer.
 
 Ableton's files are not modified, and this repository contains none of them. A small launcher starts Live with a shim library preloaded. The shim makes Live work on the desktop: window, menus, file dialogs, plug-in editors, audio through PipeWire, and mixed-scale monitors.
 
 This project is not affiliated with or endorsed by Ableton. Licensing is not touched: Live starts unauthorized, and you authorize it with your own Ableton account as usual.
 
-You need your own copies of:
-
-- the Push 3 recovery image, `Push3-RecoveryImage-2.4.7.zip` (Live 12.4.7)
-- the Windows installer of Live 12.4.7 Suite, `ableton_live_suite_12.4.7_64.zip`
+<br>
 
 ## Requirements
 
+### IMPORTANT: Due to this binary being compiled specifically for Push 3, which runs 11th Gen Intel CPU, it is restricted to AVX-512 instructions. Said instructions currently run only on <u>AMD Ryzen 7000 series</u> and above, and <u>Intel Core 10th and 11th Gen</u>.
+
+<br>
+
+Other requirements:
 - An x86-64 PC with PipeWire, and glibc 2.35 or newer (Ubuntu 22.04, Mint 21, Debian 12, Fedora 36 or newer).
 - An X11 session or Xwayland. Every mainstream desktop has one; Live runs as an X11 program.
 - About 25 GB of free space while installing, and about 7 GB after (4.5 GB program, 2.1 GB Core Library).
 
-Install the tools the installer needs with one command:
+<br>
+
+### Install the tools the installer needs with one command:
 
 | Distribution | Command |
 |---|---|
@@ -28,10 +35,32 @@ Install the tools the installer needs with one command:
 
 You do not need to install `innoextract`. The installer brings its own (see [innoextract](#innoextract)).
 
-## Install
+<br>
 
-1. Put both zips into this folder, next to `install.sh`.
-2. Run `install.sh`. Double-click it (it opens a terminal window that shows the progress and stays open at the end), or run it in a terminal:
+## Install
+1. Create a new folder.
+2. Clone this repository into a folder.
+
+   ```sh
+   git clone https://github.com/velkajelka/ableton-linux.git
+   cd ableton-linux
+   ```
+
+   Or without git:
+
+   ```sh
+   curl -L -o ableton-linux.zip https://github.com/velkajelka/ableton-linux/archive/refs/heads/main.zip
+   unzip ableton-linux.zip
+   cd ableton-linux-main
+   ```
+3. You need your own copies of:
+
+   - the Push 3 recovery image 2.4.7, available [here](https://cdn-downloads.ableton.com/hardware_updates/push3/2.4.7/Push3-RecoveryImage-2.4.7.zip)
+   - the Windows installer of Live 12.4.7 Suite, available [here](https://cdn-downloads.ableton.com/channels/12.4.7/ableton_live_suite_12.4.7_64.zip)
+
+   You can also access them on https://www.ableton.com/en/download/archive/ (but you need an account to download it from there).
+4. Put both zips into the same folder, next to `install.sh`.
+5. Run `install.sh`. Double-click it (it opens a terminal window that shows the progress and stays open at the end), or run it in a terminal:
 
    ```sh
    ./install.sh
@@ -42,8 +71,6 @@ GNOME Files opens scripts in the text editor by default. There, right-click `ins
 The program goes to `~/.local/share/ableton-live-12`. Use `--prefix DIR` for another folder; the path must not contain spaces or quotes. The installer adds Ableton Live 12 to the application menu. `.als` and `.alp` files and `ableton://` links (used for browser authorization) open in it.
 
 The installation takes about 3 to 6 minutes and shows each of its 13 steps with a progress bar. You can delete the zips afterwards.
-
-The zips can also be on a USB stick. Use exFAT, NTFS or ext4; FAT32 cannot hold files over 4 GB. The installer only reads from that folder.
 
 ### Program loader
 
@@ -64,14 +91,27 @@ Run `install.sh` again. It continues after the last finished step ("done by an e
 - If the disk is full, the installer says so.
 - Run on a complete installation, the installer asks "Install it again?". Your settings, licence and libraries stay. It refuses while Live is running.
 
-### Live sessions (USB boot)
+<br>
 
-The installer works in a live session, but a live session keeps your home folder in RAM. The installer shows a note when the install folder is on tmpfs or overlay.
+## Uninstall
 
-- The installation needs about 25 GB while it runs. Its work folder is inside the install folder, so point `--prefix` at a real disk partition.
-- The Core Library (2.1 GB) still goes to your Music folder, which is in RAM.
-- If the system runs out of memory during extraction, the installer reports that innoextract was killed.
-- A live session gets a new hardware ID at every boot, so Live asks you to authorize it again each time. Each authorization uses one of your account's authorizations.
+```sh
+~/.local/share/ableton-live-12/uninstall.sh
+```
+
+It removes the program, the Core Library and the menu entry. Your User Library, recordings and projects in `<Music>/Ableton` always stay.
+
+It asks whether to delete Live's settings and licence too (default: keep them). `--purge` deletes them without asking. It also asks whether to remove the loader link, if the installer made it. It refuses while Live is running.
+
+<br>
+
+## Not available in this build
+
+While this appears like a fully functional build, it does not include some of the features the Windows build has, such as:
+
+REX loops, VST2 (VST3 works), EXS24/SoundFont/Kontakt import, web views, video export, Push 2 display, Pack downloads, screen-reader support, and media keys.
+
+<br>
 
 ## Where Live keeps its files
 
@@ -85,38 +125,7 @@ Live behaves like any Linux program and uses your home folder, the same places i
 
 Live finds plug-ins in the usual folders (`~/.vst3`, `/usr/lib/vst3`, `/usr/local/lib/vst3`). Plug-ins keep their own settings and licences, shared with other programs. Windows plug-ins work through yabridge.
 
-## Uninstall
-
-```sh
-~/.local/share/ableton-live-12/uninstall.sh
-```
-
-It removes the program, the Core Library and the menu entry. Your User Library, recordings and projects in `<Music>/Ableton` always stay.
-
-It asks whether to delete Live's settings and licence too (default: keep them). `--purge` deletes them without asking. It also asks whether to remove the loader link, if the installer made it. It refuses while Live is running.
-
-## Tested systems
-
-| System | How | Result |
-|---|---|---|
-| Arch Linux, KDE Plasma 6 Wayland | daily use | works |
-| Linux Mint 22.3 Cinnamon (glibc 2.39) | installer and Live run in the ISO's root filesystem | install ✓, Live starts, audio ✓ |
-| Debian 13.6 KDE (glibc 2.41) | same | install ✓, Live starts, audio engine off until `pipewire-alsa` is installed |
-| Kubuntu 26.04.1 (glibc 2.43) | same | install ✓, Live starts, audio ✓ |
-| Fedora 44 KDE (glibc 2.43) | same | install ✓, Live starts, audio ✓ |
-| Mint, Fedora KDE, CachyOS | earlier builds, on real installs | Live runs |
-
-For the ISO tests, each live image's root filesystem was unpacked and `install.sh` ran inside it in a container (bwrap). Live then started on a nested KWin display with the system's own libraries. In every system, all libraries Live needs were found.
-
-Not yet tested: a real live-boot session (RAM limits), GNOME, Xfce and other window managers in a real session.
-
-### Desktops
-
-KDE Plasma is tested. The parts that depend on the desktop also handle others:
-
-- **Sleep while Live runs.** Live asks the desktop portal not to suspend; without a portal it uses `org.freedesktop.PowerManagement` and `org.freedesktop.ScreenSaver`.
-- **File dialogs.** Live uses the desktop's file dialog through the portal; without a portal file chooser it uses Qt's own dialog.
-- **No minimize button on plug-in editor windows.** KWin gets a window rule (`tools/kwin-plugin-rule.sh`). Other window managers get `_MOTIF_WM_HINTS` and `WM_TRANSIENT_FOR`.
+<br>
 
 ## Troubleshooting
 
@@ -129,27 +138,7 @@ KDE Plasma is tested. The parts that depend on the desktop also handle others:
 | `xdg-mime: ... qtpaths: command not found` in the terminal (Fedora) | Harmless. |
 | Saving and exporting are deactivated | Live is not authorized yet. Authorize it with your Ableton account. |
 
-### Settings for special cases
-
-The launcher and the shim read these environment variables:
-
-| Variable | Effect |
-|---|---|
-| `LIVE_DATA_DIR=<folder>` | Run Live with a separate data folder instead of your home |
-| `LIVE_ALSA_DEVICE=<pcm>` | Send Live's audio to another ALSA PCM instead of `pipewire` |
-| `LIVE_ALSA_EXCLUSIVE=1` | Give Live direct, exclusive access to the sound card (no PipeWire) |
-| `LIVE_ALSA_FORMAT=device` | Let ALSA pick the sample format instead of the best one the device accepts |
-| `LIVE_INHIBIT_SLEEP=system` | Prevent only suspend, not screen blanking; `0` prevents neither |
-| `LIVE_NATIVE_MENU=0` | Use the menu band Live draws itself instead of the shim's Qt menu bar |
-| `LIVE_SHIM=<path>` | Preload another build of the shim |
-
-`Options-desktop.txt` holds Live's own options: ALSA MIDI, no start-up messages and no automatic updates.
-
-## Not available in this build
-
-The Linux build in the Push 3 image does not include these:
-
-REX loops, VST2 (VST3 works), EXS24/SoundFont/Kontakt import, web views, video export, Push 2 display, Pack downloads, screen-reader support, and media keys.
+<br>
 
 ## Contents
 
@@ -166,15 +155,9 @@ REX loops, VST2 (VST3 works), EXS24/SoundFont/Kontakt import, web views, video e
 | `tools/innoextract-compat.cpp` | Lets the bundled innoextract run on glibc 2.35 |
 | `Options-desktop.txt` | Live options: ALSA MIDI, no start-up messages, no auto-updates |
 
-## Building from source
+<br>
 
-The prebuilt files can be rebuilt from the sources in this repository:
-
-- **Shim:** `shim/build.sh` (needs g++, Qt 5 and ALSA headers).
-- **Launcher:** `gcc -static -s -O2 -Wall -o tools/AbletonLive12-launcher tools/launcher.c`
-- **innoextract:** steps in `tools/bundled/README`.
-
-### innoextract
+## innoextract
 
 Live 12.4.7's Suite installer is made with Inno Setup 6.4. innoextract 1.9, the latest release and the version most distributions ship, cannot read it ("Unexpected setup data version: 6.4.0.1"). Support for 6.4 exists only in innoextract's development code.
 
